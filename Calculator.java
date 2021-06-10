@@ -113,7 +113,15 @@ public class Calculator {
 						numsb.append(input.charAt(i++));
 				}
 				i--;
-				tokens.add(numsb.toString());
+				
+				// If number ends in e, roll back the counter and chop the last character of the number string
+				String numstr = numsb.toString();
+				if (numstr.endsWith("e")) {
+					numstr = numstr.substring(0, numstr.length() - 1);
+					i--;
+				}
+				
+				tokens.add(numstr);
 
 				// If number followed by function, add the implicit multiplication, e.g. 5tan(pi/2) => 5*tan(pi/2)
 				if (i < (input.length() - 1) && Character.isLetter(input.charAt(i+1)))
@@ -294,9 +302,10 @@ public class Calculator {
 		output = Double.parseDouble(outstr);
 	}
 	
-	public double solve(String input) {
+	public Object[] solve(String input) {
 		// Sanitize input by removing all whitespace and making input lower case
 		this.input = input.replaceAll("\\s+", "").toLowerCase();
+		
 		int eqidx = this.input.indexOf("=");
 		
 		String varName = null;
@@ -314,10 +323,10 @@ public class Calculator {
 		
 		// Add the variable and its value to the variable HashMap
 		if (varName != null) {
-			variables.put(varName, String.valueOf(this.output));
+			variables.put(varName, this.outstr);
 		}
 		
-		return this.output;
+		return new Object[]{(varName != null) ? varName : "Ans", this.output};
 	}
 	
 	public void print() {
@@ -326,7 +335,7 @@ public class Calculator {
 		// Have to redo infix to postfix conversion because the queue was emptied but its debug mode so ¯\_(ツ)_/¯
 		infixToPostfix();
 		System.out.print("Postfix: "); outqueue.forEach(i -> System.out.print(i + " ")); System.out.println();
-		System.out.println("Input: " + output);
+		System.out.println("Output: " + output);
 	}
 
 	public static void main(String[] args) {
@@ -335,6 +344,9 @@ public class Calculator {
 		
 		boolean shExit = false;
 		boolean debug = false;
+		
+		boolean bin = false;
+		boolean hex = false;
 		
 		String input;
 				
@@ -362,8 +374,25 @@ public class Calculator {
 				else if (input.equals("dbg") || input.equals("debug")) {
 					debug = true;
 				}
+				else if (input.equals("bin")) {
+					bin = true; hex = false;
+				}
+				else if (input.equals("hex")) {
+					hex = true; bin = false;
+				}
+				else if (input.equals("dec")) {
+					bin = hex = false;
+				}
 				else {
-					try { System.out.println(c.solve(input)); }
+					try {
+						for (String expr : input.split(";")) {
+							Object[] soln = c.solve(expr);
+							System.out.print(soln[0]+" = ");
+							Double sol = (Double) soln[1];
+							System.out.println((hex) ? Integer.toHexString(sol.intValue()) 
+								: ((bin) ? Integer.toBinaryString(sol.intValue()) : String.valueOf(sol))); 
+						}
+					}
 					catch (Exception e) { System.out.println("Invalid expression"); }
 					if (debug) c.print();
 				}
