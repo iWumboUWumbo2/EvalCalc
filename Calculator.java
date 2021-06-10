@@ -6,17 +6,21 @@ class Operator {
 	public char op;
 	public int precedence;
 	public int associativity;
+	public int type;
 	
-	public Operator(char op, int precedence, int associativity) {
+	public Operator(char op, int precedence, int associativity, int type) {
 		this.op = op;
 		this.precedence = precedence;
 		this.associativity = associativity;
+		this.type = type;
 	}
 }
 
 public class Calculator {
 	static final int LEFT = 0;
+	static final int BINARY = 0;
 	static final int RIGHT = 1;
+	static final int UNARY = 1;
 	
 	private String input;
 	
@@ -34,11 +38,12 @@ public class Calculator {
 
 	public Calculator() {		
 		operators = new HashMap<>();
-		operators.put('^', new Operator('^', 4, RIGHT));
-		operators.put('*', new Operator('*', 3,  LEFT));
-		operators.put('/', new Operator('/', 3,  LEFT));
-		operators.put('+', new Operator('+', 2,  LEFT));
-		operators.put('-', new Operator('-', 2,  LEFT));
+		operators.put('^', new Operator('^', 4, RIGHT, BINARY));
+		operators.put('*', new Operator('*', 3,  LEFT, BINARY));
+		operators.put('/', new Operator('/', 3,  LEFT, BINARY));
+		operators.put('+', new Operator('+', 2,  LEFT, BINARY));
+		operators.put('-', new Operator('-', 2,  LEFT, BINARY));
+		operators.put('!', new Operator('-', 5,  LEFT,  UNARY));
 		
 		functions = new HashSet<>(
 			Arrays.asList("sin", "cos", "tan", 
@@ -78,14 +83,40 @@ public class Calculator {
 				else tokens.add(String.valueOf(input.charAt(i)));
 			}
 			// Add other operators
-			else if (operators.containsKey(input.charAt(i)) || input.charAt(i) == ')') {
+			else if (operators.containsKey(input.charAt(i))) {
+				// If operator not preceded by a number, set the preceding number to the answer of the previous operation
+				if (i == 0) tokens.add(defaults.get("ans"));
 				tokens.add(String.valueOf(input.charAt(i)));
 			}
+			else if (input.charAt(i) == ')') {
+				tokens.add(String.valueOf(input.charAt(i)));
+				// Check for input like (5)(5), (5)5 or (5).5 and add the implicit multiplication
+				if (i < (input.length() - 1) && 
+					(input.charAt(i+1) == '(' ||Character.isDigit(input.charAt(i+1)) || input.charAt(i+1) == '.' || Character.isLetter(input.charAt(i+1))))
+				tokens.add("*");
+			}				
 			// Add parentheses
 			else if (input.charAt(i) == '(') {
-				if (i != 0 && (input.charAt(i-1) == ')' || Character.isDigit(input.charAt(i-1)) || input.charAt(i-1) == '.'))
+				// Check for input like 5(5) or 5.(5) and add the implicit multiplication
+				if (i != 0 && (Character.isDigit(input.charAt(i-1)) || input.charAt(i-1) == '.'))
 					tokens.add("*");
 				tokens.add(String.valueOf(input.charAt(i)));
+			}
+			// Add numbers
+			else if (Character.isDigit(input.charAt(i)) || input.charAt(i) == '.') {
+				StringBuilder numsb = new StringBuilder();
+				while (i < input.length() && (Character.isDigit(input.charAt(i)) || input.charAt(i) == '.' || input.charAt(i) == 'e')) {
+					numsb.append(input.charAt(i++));
+					// Check for scientific notation
+					if (i < (input.length() - 1) && input.charAt(i-1) == 'e' && (input.charAt(i) == '+' || input.charAt(i) == '-'))
+						numsb.append(input.charAt(i++));
+				}
+				i--;
+				tokens.add(numsb.toString());
+
+				// If number followed by function, add the implicit multiplication, e.g. 5tan(pi/2) => 5*tan(pi/2)
+				if (i < (input.length() - 1) && Character.isLetter(input.charAt(i+1)))
+					tokens.add("*");
 			}
 			// Add functions
 			else if (Character.isLetter(input.charAt(i))) {
@@ -95,22 +126,14 @@ public class Calculator {
 				}
 				i--;
 				
-				String funcstr = funcsb.toString().toLowerCase();
+				// Check for constants/variables and replace them accordingly
+				String funcstr = funcsb.toString();
 				if (defaults.containsKey(funcstr))
 					tokens.add(defaults.get(funcstr));
 				else if (variables.containsKey(funcstr))
 					tokens.add(variables.get(funcstr));
 				else
 					tokens.add(funcstr);
-			}
-			// Add numbers
-			else if (Character.isDigit(input.charAt(i)) || input.charAt(i) == '.') {
-				StringBuilder numsb = new StringBuilder();
-				while (i < input.length() && (Character.isDigit(input.charAt(i)) || input.charAt(i) == '.')) {
-					numsb.append(input.charAt(i++));
-				}
-				i--;
-				tokens.add(numsb.toString());				
 			}
 			
 			i++;
@@ -138,27 +161,42 @@ public class Calculator {
 		Stack<String> opstack = new Stack<>();
 		
 		for (String t : this.tokens) {
+			// Number so add to output queue
 			if (isNumber(t)) outqueue.add(t);
+			// Function so add to operator stack
 			else if (isAlpha(t)) opstack.push(t);
+			// Operator
 			else if (operators.containsKey(t.charAt(0))) {
+				// Let o1 be the operation associated with the current char
 				Operator o1 = operators.get(t.charAt(0));
+				// While the operator stack is not empty and there isn't a parenthetical expression coming up,
+				// If o1 is left associative and its precedence is leq the precedence of the op at the top of the operator stack
+				// Or o1 is right associative and its precedence is lt the precedence of the op at the top of the operator stack
+				// Push from the operator stack to the output queue  
 				while (!opstack.empty() && !opstack.peek().equals("(")
 					&& ((o1.associativity == LEFT && o1.precedence <= operators.get(opstack.peek().charAt(0)).precedence) 
 					|| (o1.associativity == RIGHT && o1.precedence < operators.get(opstack.peek().charAt(0)).precedence))) {
 						outqueue.add(opstack.pop());
 					}
+				// Push o1 to the operator stack
 				opstack.push(t);
 			}
+			// Left parenthese so add to operator stack
 			else if (t.equals("(")) opstack.push(t);
+			// Right parenthese
 			else if (t.equals(")")) {
+				// Add everything within parentheses to the output queue as they have the highest priority
 				while (!opstack.peek().equals("("))
 					outqueue.add(opstack.pop());
+				// Discard the left parenthese
 				opstack.pop();
+				// If the parenthese is for a function, add the subsequent function
 				if (!opstack.empty() && isAlpha(opstack.peek()))
 					outqueue.add(opstack.pop());
 			}
 		}
 		
+		// Add everything else in the operator stack to the output queue
 		while (!opstack.empty())
 			outqueue.add(opstack.pop());
 	}
@@ -170,7 +208,7 @@ public class Calculator {
 		return String.valueOf(result);
 	}
 
-	private String performOperation(String a, String b, char op) {
+	private String performBinaryOperation(String a, String b, char op) {
 		double u = Double.parseDouble(b);
 		double v = Double.parseDouble(a);
 		
@@ -180,6 +218,16 @@ public class Calculator {
 			case '/': return String.valueOf(u / v);
 			case '+': return String.valueOf(u + v);
 			case '-': return String.valueOf(u - v);
+		}
+		
+		return "0";
+	}
+	
+	private String performUnaryOperation(String a, char op) {
+		double u = Double.parseDouble(a);
+		
+		switch (op) {
+			case '!': return factorial((int) u);
 		}
 		
 		return "0";
@@ -223,13 +271,17 @@ public class Calculator {
 		Stack<String> stack = new Stack<>();
 		
 		while (!outqueue.isEmpty()) {
-			String t = outqueue.remove().toLowerCase();
+			String t = outqueue.remove();
 			char tc = t.charAt(0);
 			
 			if (isNumber(t)) 
 				stack.push(t);
-			else if (operators.containsKey(tc))
-				stack.push(performOperation(stack.pop(), stack.pop(), tc));
+			else if (operators.containsKey(tc)) {
+				if (operators.get(tc).type == BINARY)
+					stack.push(performBinaryOperation(stack.pop(), stack.pop(), tc));
+				else if (operators.get(tc).type == UNARY)
+					stack.push(performUnaryOperation(stack.pop(), tc));
+			}
 			else if (functions.contains(t))
 				stack.push(performFunction(stack.pop(), t));
 		}
@@ -242,20 +294,24 @@ public class Calculator {
 	}
 	
 	public double solve(String input) {
-		this.input = input.replaceAll("\\s+", "");
+		// Sanitize input by removing all whitespace and making input lower case
+		this.input = input.replaceAll("\\s+", "").toLowerCase();
 		int eqidx = this.input.indexOf("=");
 		
 		String varName = null;
 		
+		// Set variable name to everything befor '=' and expression to everything after
 		if (eqidx > 0) {
 			varName = this.input.substring(0, eqidx);
 			this.input = this.input.substring(eqidx + 1);
 		}
 		
+		// Solve
 		tokenize();
 		infixToPostfix();
 		evaluate();
 		
+		// Add the variable and its value to the variable HashMap
 		if (varName != null) {
 			variables.put(varName, String.valueOf(this.output));
 		}
@@ -266,6 +322,7 @@ public class Calculator {
 	public void print() {
 		System.out.println("Input: " + input);		
 		System.out.print("Tokens: "); tokens.forEach(i -> System.out.print(i + " ")); System.out.println();
+		// Have to redo infix to postfix conversion because the queue was emptied but its debug mode so ¯\_(ツ)_/¯
 		infixToPostfix();
 		System.out.print("Postfix: "); outqueue.forEach(i -> System.out.print(i + " ")); System.out.println();
 		System.out.println("Input: " + output);
@@ -282,7 +339,7 @@ public class Calculator {
 				
 		System.out.println("EvalCalc 1.0\nType 'exit' or 'quit' to quit the program/debug mode.\nType 'dbg' or 'debug' to enter debug mode.\nType 'help' to learn this program's features.\n");
 		while (!shExit) {
-			System.out.print((debug) ? "(dbg) " : ">> ");
+			System.out.print((debug) ? "(*) " : ">> ");
 			if (sc.hasNextLine()) {
 				input = sc.nextLine().toLowerCase();
 				
@@ -295,7 +352,7 @@ public class Calculator {
 					System.out.println("A variable can be used in place of a number in an expression.\n");
 					System.out.println("The following default variables are present:\n\tPi:\t3.141592...\n\tAns:\tThe output of the most recently executed expression.\n\tRand:\tA randomly generated number between 0 and 1.\n");
 					System.out.println("The following operators are available:");
-					System.out.println("\tAddition:\t'+'\n\tSubtraction:\t'-'\n\tMultiplication:\t'*'\n\tDivision:\t'/'\n\tExponentiation:\t'^'\n");
+					System.out.println("\tAddition:\t'+'\n\tSubtraction:\t'-'\n\tMultiplication:\t'*'\n\tDivision:\t'/'\n\tExponentiation:\t'^'\n\tFactorial:\t'!'");
 					System.out.println("The following functions are available:");
 					System.out.println("\tsin,\tcos,\ttan,\n\tasin,\tacos,\tatan,\t\n\tcosh,\tsinh,\ttanh,\t\n\tsqrt,\tcbrt,\texp,\t\n\tabs,\tceil,\tfloor,\t\n\tround,\tsign,\tln,\t\n\tlog,\tdeg,\trad");
 					System.out.println("Debug mode allows the user the see the stack and is used for ensuring the expression is being correctly parsed.\n");
