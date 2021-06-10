@@ -25,7 +25,8 @@ public class Calculator {
 	private String input;
 	
 	private HashMap<Character, Operator> operators;
-	private HashSet<String> functions;
+	private HashSet<String> oneINFunctions;
+	private HashSet<String> twoINFunctions;
 	
 	private HashMap<String, String> defaults;
 	private HashMap<String, String> variables;
@@ -43,9 +44,10 @@ public class Calculator {
 		operators.put('/', new Operator('/', 3,  Operator.LEFT, Operator.BINARY));
 		operators.put('+', new Operator('+', 2,  Operator.LEFT, Operator.BINARY));
 		operators.put('-', new Operator('-', 2,  Operator.LEFT, Operator.BINARY));
-		operators.put('!', new Operator('-', 5,  Operator.LEFT,  Operator.UNARY));
+		operators.put('%', new Operator('%', 3,  Operator.LEFT, Operator.BINARY));
+		operators.put('!', new Operator('!', 5,  Operator.LEFT,  Operator.UNARY));
 		
-		functions = new HashSet<>(
+		oneINFunctions = new HashSet<>(
 			Arrays.asList("sin", "cos", "tan", 
 				"asin", "acos", "atan", 
 				"cosh", "sinh", "tanh", 
@@ -53,6 +55,10 @@ public class Calculator {
 				"abs", "ceil", "floor", "round", 
 				"ln", "log", 
 				"deg", "rad", "sign")
+			);
+			
+		twoINFunctions = new HashSet<>(
+			Arrays.asList("max", "min", "mod", "randr", "randir")
 			);
 		
 		defaults = new HashMap<>();
@@ -246,6 +252,7 @@ public class Calculator {
 			case '/': return String.valueOf(u / v);
 			case '+': return String.valueOf(u + v);
 			case '-': return String.valueOf(u - v);
+			case '%': return String.valueOf(u / 100.0 * v);
 		}
 		
 		return "0";
@@ -261,7 +268,7 @@ public class Calculator {
 		return "0";
 	}
 
-	private String performFunction(String a, String func) {
+	private String performOneINFunctions(String a, String func) {
 		double u = Double.parseDouble(a);
 		
 		if (func.equals("sin")) 		return String.valueOf(Math.sin(u));
@@ -294,6 +301,18 @@ public class Calculator {
 		
 		else 							return "0";
 	}
+	
+	private String performTwoINFunctions(String a, String b, String func) {
+		double u = Double.parseDouble(b);
+		double v = Double.parseDouble(a);
+		
+		if (func.equals("max")) 		return String.valueOf(Math.max(u, v));
+		else if (func.equals("min")) 	return String.valueOf(Math.min(u, v));
+		else if (func.equals("mod")) 	return String.valueOf(u % v);
+		else if (func.equals("randr")) 	return String.valueOf(((Math.random() * (v - u)) + u));
+		else if (func.equals("randir")) return String.valueOf((int) ((Math.random() * (v - u)) + u));
+		else 							return "0";
+	}
 
 	private void evaluate() {
 		Stack<String> stack = new Stack<>();
@@ -310,8 +329,10 @@ public class Calculator {
 				else if (operators.get(tc).type == Operator.UNARY)
 					stack.push(performUnaryOperation(stack.pop(), tc));
 			}
-			else if (functions.contains(t))
-				stack.push(performFunction(stack.pop(), t));
+			else if (oneINFunctions.contains(t))
+				stack.push(performOneINFunctions(stack.pop(), t));
+			else if (twoINFunctions.contains(t))
+				stack.push(performTwoINFunctions(stack.pop(), stack.pop(), t));
 		}
 		
 		outstr = stack.pop();
@@ -332,6 +353,8 @@ public class Calculator {
 		// Set variable name to everything befor '=' and expression to everything after
 		if (eqidx > 0) {
 			varName = this.input.substring(0, eqidx);
+			if (oneINFunctions.contains(varName) || twoINFunctions.contains(varName))
+				varName = "x";
 			this.input = this.input.substring(eqidx + 1);
 		}
 		
