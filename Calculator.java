@@ -384,12 +384,13 @@ public class Calculator {
 					System.out.println("Reminder! Input is case-insensitive!\n");
 					System.out.println("To set a variable equal to an expression, write it in the form \"<varname> = <expression>\" where <varname> is the name of the variable and <expression> is the expression it should be set to.");
 					System.out.println("A variable can be used in place of a number in an expression.\n");
+					System.out.println("To set output to binary, octal, decimal, or hexadecimal, type bin, oct, dec, hex, respectively.\nTo type a binary number, prefix its string with \"0b\"; octal, \"0o\"; decimal, \"0d\"; hexadecimal, \"0x\"\n");
 					System.out.println("The following default variables are present:\n\tpi:\t3.1415926...\n\te:\t2.7182818...\n\tAns:\tThe output of the most recently executed expression.\n\tRand:\tA randomly generated number between 0 and 1.\n");
 					System.out.println("The following operators are available:");
 					System.out.println("\tAddition:\t'+'\n\tSubtraction:\t'-'\n\tMultiplication:\t'*'\n\tDivision:\t'/'\n\tExponentiation:\t'^'\n\tFactorial:\t'!'");
 					System.out.println("The following functions are available:");
 					System.out.println("\tsin,\tcos,\ttan,\n\tasin,\tacos,\tatan,\t\n\tcosh,\tsinh,\ttanh,\t\n\tsqrt,\tcbrt,\texp,\t\n\tabs,\tceil,\tfloor,\t\n\tround,\tsign,\tln,\t\n\tlog,\tdeg,\trad");
-					System.out.println("Debug mode allows the user the see the stack and is used for ensuring the expression is being correctly parsed.\n");
+					System.out.println("\nDebug mode allows the user the see the stack and is used for ensuring the expression is being correctly parsed.\n");
 				}
 				else if (input.equals("dbg") || input.equals("debug")) {
 					debug = true;
