@@ -5,7 +5,10 @@ How to use:
 Reminder! Input is case-insensitive!
 
 To set a variable equal to an expression, write it in the form "<varname> = <expression>" where <varname> is the name of the variable and <expression> is the expression it should be set to. \
-A variable can be used in place of a number in an expression.
+A variable can be used in place of a number in an expression. \
+
+To set output to binary, octal, decimal, or hexadecimal, type bin, oct, dec, hex, respectively. \
+To type a binary number, prefix its string with "0b"; octal, "0o"; decimal, "0d"; hexadecimal, "0x"
 
 **The following default variables are present:** \
         Pi:     3.1415926... \
