@@ -89,6 +89,7 @@ public class Calculator {
 				if (i == 0) tokens.add(defaults.get("ans"));
 				tokens.add(String.valueOf(input.charAt(i)));
 			}
+			// Add parentheses
 			else if (input.charAt(i) == ')') {
 				tokens.add(String.valueOf(input.charAt(i)));
 				// Check for input like (5)(5), (5)5 or (5).5 and add the implicit multiplication
@@ -96,12 +97,30 @@ public class Calculator {
 					(input.charAt(i+1) == '(' ||Character.isDigit(input.charAt(i+1)) || input.charAt(i+1) == '.' || Character.isLetter(input.charAt(i+1))))
 				tokens.add("*");
 			}				
-			// Add parentheses
 			else if (input.charAt(i) == '(') {
 				// Check for input like 5(5) or 5.(5) and add the implicit multiplication
 				if (i != 0 && (Character.isDigit(input.charAt(i-1)) || input.charAt(i-1) == '.'))
 					tokens.add("*");
 				tokens.add(String.valueOf(input.charAt(i)));
+			}
+			// Parse hexadecimal/octal/bianry numbers
+			else if (i < (input.length() - 2) && input.charAt(i) == '0' && 
+					(input.charAt(i+1) == 'x' || input.charAt(i+1) == 'b' || input.charAt(i+1) == 'o' || input.charAt(i+1) == 'd')) {
+				char type = input.charAt(i+1);
+				int radix;
+				switch(type) {
+					case 'x': radix = 16; break;
+					case 'b': radix =  2; break;
+					case 'o': radix =  8; break;
+					default:  radix = 10; break;
+				}
+				i += 2;
+				StringBuilder radsb = new StringBuilder();
+				while (i < input.length() && Character.digit(input.charAt(i), radix) >= 0) {
+					radsb.append(input.charAt(i++));
+				}
+				i--;
+				tokens.add(String.valueOf(Long.parseLong(radsb.toString(), radix)));
 			}
 			// Add numbers
 			else if (Character.isDigit(input.charAt(i)) || input.charAt(i) == '.') {
@@ -210,7 +229,7 @@ public class Calculator {
 			outqueue.add(opstack.pop());
 	}
 
-	public static String factorial (int n) {
+	public static String factorial (long n) {
 		BigInteger result = BigInteger.valueOf(1);
 		for (; n > 1; n--)
 			result = result.multiply(BigInteger.valueOf(n));
@@ -236,7 +255,7 @@ public class Calculator {
 		double u = Double.parseDouble(a);
 		
 		switch (op) {
-			case '!': return factorial((int) u);
+			case '!': return factorial((long) u);
 		}
 		
 		return "0";
@@ -347,6 +366,7 @@ public class Calculator {
 		
 		boolean bin = false;
 		boolean hex = false;
+		boolean oct = false;
 		
 		String input;
 				
@@ -375,13 +395,16 @@ public class Calculator {
 					debug = true;
 				}
 				else if (input.equals("bin")) {
-					bin = true; hex = false;
+					bin = true; hex = oct = false;
 				}
 				else if (input.equals("hex")) {
-					hex = true; bin = false;
+					hex = true; oct = bin = false;
+				}
+				else if (input.equals("oct")) {
+					oct = true; hex = bin = false;
 				}
 				else if (input.equals("dec")) {
-					bin = hex = false;
+					oct = bin = hex = false;
 				}
 				else {
 					try {
@@ -389,8 +412,10 @@ public class Calculator {
 							Object[] soln = c.solve(expr);
 							System.out.print(soln[0]+" = ");
 							Double sol = (Double) soln[1];
-							System.out.println((hex) ? Integer.toHexString(sol.intValue()) 
-								: ((bin) ? Integer.toBinaryString(sol.intValue()) : String.valueOf(sol))); 
+							System.out.println((hex) ? ("0x"+Long.toHexString(sol.longValue())) 
+											: ((bin) ? ("0b"+Long.toBinaryString(sol.longValue())) 
+											: ((oct) ? ("0o"+Long.toOctalString(sol.longValue())) 
+											: String.valueOf(sol)))); 
 						}
 					}
 					catch (Exception e) { System.out.println("Invalid expression"); }
