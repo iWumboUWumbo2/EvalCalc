@@ -3,6 +3,11 @@ import java.util.regex.Pattern;
 import java.math.BigInteger;
 
 class Operator {
+	public static final int LEFT = 0;
+	public static final int BINARY = 0;
+	public static final int RIGHT = 1;
+	public static final int UNARY = 1;
+	
 	public char op;
 	public int precedence;
 	public int associativity;
@@ -17,11 +22,6 @@ class Operator {
 }
 
 public class Calculator {
-	static final int LEFT = 0;
-	static final int BINARY = 0;
-	static final int RIGHT = 1;
-	static final int UNARY = 1;
-	
 	private String input;
 	
 	private HashMap<Character, Operator> operators;
@@ -38,12 +38,12 @@ public class Calculator {
 
 	public Calculator() {		
 		operators = new HashMap<>();
-		operators.put('^', new Operator('^', 4, RIGHT, BINARY));
-		operators.put('*', new Operator('*', 3,  LEFT, BINARY));
-		operators.put('/', new Operator('/', 3,  LEFT, BINARY));
-		operators.put('+', new Operator('+', 2,  LEFT, BINARY));
-		operators.put('-', new Operator('-', 2,  LEFT, BINARY));
-		operators.put('!', new Operator('-', 5,  LEFT,  UNARY));
+		operators.put('^', new Operator('^', 4, Operator.RIGHT, Operator.BINARY));
+		operators.put('*', new Operator('*', 3,  Operator.LEFT, Operator.BINARY));
+		operators.put('/', new Operator('/', 3,  Operator.LEFT, Operator.BINARY));
+		operators.put('+', new Operator('+', 2,  Operator.LEFT, Operator.BINARY));
+		operators.put('-', new Operator('-', 2,  Operator.LEFT, Operator.BINARY));
+		operators.put('!', new Operator('-', 5,  Operator.LEFT,  Operator.UNARY));
 		
 		functions = new HashSet<>(
 			Arrays.asList("sin", "cos", "tan", 
@@ -174,8 +174,8 @@ public class Calculator {
 				// Or o1 is right associative and its precedence is lt the precedence of the op at the top of the operator stack
 				// Push from the operator stack to the output queue  
 				while (!opstack.empty() && !opstack.peek().equals("(")
-					&& ((o1.associativity == LEFT && o1.precedence <= operators.get(opstack.peek().charAt(0)).precedence) 
-					|| (o1.associativity == RIGHT && o1.precedence < operators.get(opstack.peek().charAt(0)).precedence))) {
+					&& ((o1.associativity == Operator.LEFT && o1.precedence <= operators.get(opstack.peek().charAt(0)).precedence) 
+					|| (o1.associativity == Operator.RIGHT && o1.precedence < operators.get(opstack.peek().charAt(0)).precedence))) {
 						outqueue.add(opstack.pop());
 					}
 				// Push o1 to the operator stack
@@ -277,9 +277,9 @@ public class Calculator {
 			if (isNumber(t)) 
 				stack.push(t);
 			else if (operators.containsKey(tc)) {
-				if (operators.get(tc).type == BINARY)
+				if (operators.get(tc).type == Operator.BINARY)
 					stack.push(performBinaryOperation(stack.pop(), stack.pop(), tc));
-				else if (operators.get(tc).type == UNARY)
+				else if (operators.get(tc).type == Operator.UNARY)
 					stack.push(performUnaryOperation(stack.pop(), tc));
 			}
 			else if (functions.contains(t))
