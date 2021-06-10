@@ -392,6 +392,7 @@ public class Calculator {
 		boolean oct = false;
 		
 		String input;
+		String oldinput = "0.0";
 				
 		System.out.println("EvalCalc 1.0\nType 'exit' or 'quit' to quit the program/debug mode.\nType 'dbg' or 'debug' to enter debug mode.\nType 'help' to learn this program's features.\n");
 		while (!shExit) {
@@ -432,6 +433,8 @@ public class Calculator {
 				}
 				else {
 					try {
+						if (input.equals("")) input = oldinput;
+						
 						for (String expr : input.split(";")) {
 							Object[] soln = c.solve(expr);
 							System.out.print(soln[0]+" = ");
@@ -441,6 +444,7 @@ public class Calculator {
 											: ((oct) ? ("0o"+Long.toOctalString(sol.longValue())) 
 											: String.valueOf(sol)))); 
 						}
+						oldinput = input;
 					}
 					catch (Exception e) { System.out.println("Invalid expression"); }
 					if (debug) c.print();
