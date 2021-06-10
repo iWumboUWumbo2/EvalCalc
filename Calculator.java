@@ -57,6 +57,7 @@ public class Calculator {
 		
 		defaults = new HashMap<>();
 		defaults.put("pi", String.valueOf(Math.PI));
+		defaults.put("e", String.valueOf(Math.E));
 		defaults.put("ans", "0.0");
 		defaults.put("rand", String.valueOf(Math.random()));		
 		
@@ -339,7 +340,7 @@ public class Calculator {
 				
 		System.out.println("EvalCalc 1.0\nType 'exit' or 'quit' to quit the program/debug mode.\nType 'dbg' or 'debug' to enter debug mode.\nType 'help' to learn this program's features.\n");
 		while (!shExit) {
-			System.out.print((debug) ? "(*) " : ">> ");
+			System.out.print((debug) ? "(*) " : ">>> ");
 			if (sc.hasNextLine()) {
 				input = sc.nextLine().toLowerCase();
 				
@@ -348,9 +349,10 @@ public class Calculator {
 					else shExit = true;
 				}
 				else if (input.equals("help")) {
+					System.out.println("Reminder! Input is case-insensitive!\n");
 					System.out.println("To set a variable equal to an expression, write it in the form \"<varname> = <expression>\" where <varname> is the name of the variable and <expression> is the expression it should be set to.");
 					System.out.println("A variable can be used in place of a number in an expression.\n");
-					System.out.println("The following default variables are present:\n\tPi:\t3.141592...\n\tAns:\tThe output of the most recently executed expression.\n\tRand:\tA randomly generated number between 0 and 1.\n");
+					System.out.println("The following default variables are present:\n\tpi:\t3.1415926...\n\te:\t2.7182818...\n\tAns:\tThe output of the most recently executed expression.\n\tRand:\tA randomly generated number between 0 and 1.\n");
 					System.out.println("The following operators are available:");
 					System.out.println("\tAddition:\t'+'\n\tSubtraction:\t'-'\n\tMultiplication:\t'*'\n\tDivision:\t'/'\n\tExponentiation:\t'^'\n\tFactorial:\t'!'");
 					System.out.println("The following functions are available:");
