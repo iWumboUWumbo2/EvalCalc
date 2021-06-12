@@ -7,12 +7,9 @@ Reminder! Input is case-insensitive!
 To set a variable equal to an expression, write it in the form "<varname> = <expression>" where <varname> is the name of the variable and <expression> is the expression it should be set to. \
 A variable can be used in place of a number in an expression. \
 
-To set output to binary, octal, decimal, or hexadecimal, type bin, oct, dec, hex, respectively. \
-To type a binary number, prefix its string with "0b"; octal, "0o"; decimal, "0d"; hexadecimal, "0x"
-
 **The following default variables are present:** \
         Pi:     3.1415926... \
-		e:		2.7182818... \
+	e:	2.7182818... \
         Ans:    The output of the most recently executed expression. \
         Rand:   A randomly generated number between 0 and 1.
 
@@ -22,7 +19,8 @@ To type a binary number, prefix its string with "0b"; octal, "0o"; decimal, "0d"
         Multiplication: '*' \
         Division:       '/' \
         Exponentiation: '^' \
-        Factorial:      '!'
+        Factorial:      '!' \
+	Percent:	'%'
   
 **The following functions are available:** \
         sin,    cos,    tan, \
@@ -31,6 +29,11 @@ To type a binary number, prefix its string with "0b"; octal, "0o"; decimal, "0d"
         sqrt,   cbrt,   exp, \
         abs,    ceil,   floor, \
         round,  sign,   ln, \
-        log,    deg,    rad
+        log,    deg,    rad, \
+		max,	min,	mod, \
+		randr,  randir
+
+To set output to binary, octal, decimal, or hexadecimal, type bin, oct, dec, hex, respectively. \
+To type a binary number, prefix its string with "0b"; octal, "0o"; decimal, "0d"; hexadecimal, "0x"
 
 Debug mode allows for testing to see the stack and is used for ensuring the expression is being correctly parsed.
