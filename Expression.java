@@ -109,6 +109,9 @@ public class Expression {
 					tokens.add("*");
 				tokens.add(String.valueOf(input.charAt(i)));
 			}
+			else if (input.charAt(i) == ',') {
+				tokens.add(String.valueOf(input.charAt(i)));
+			}
 			// Parse hexadecimal/octal/bianry numbers
 			else if (i < (input.length() - 2) && input.charAt(i) == '0' && 
 					(input.charAt(i+1) == 'x' || input.charAt(i+1) == 'b' || input.charAt(i+1) == 'o' || input.charAt(i+1) == 'd')) {
@@ -226,6 +229,10 @@ public class Expression {
 				opstack.pop();
 				// If the parenthese is for a function, add the subsequent function
 				if (!opstack.empty() && isAlpha(opstack.peek()))
+					outqueue.add(opstack.pop());
+			}
+			else if (t.equals(",")) {
+				while (!opstack.peek().equals("("))
 					outqueue.add(opstack.pop());
 			}
 		}

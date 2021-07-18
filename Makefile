@@ -1,6 +1,7 @@
 JFLAGS = -g
 JC = javac
 RM=del
+CLS=cls
 
 .SUFFIXES: .java .class
 .java.class:
@@ -15,6 +16,7 @@ default: classes
 classes: $(CLASSES:.java=.class)
 
 run:
+	$(CLS)
 	java Calculator
 
 clean:

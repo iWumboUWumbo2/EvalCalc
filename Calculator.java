@@ -27,7 +27,7 @@ public class Calculator {
 		boolean bin = false;
 		boolean hex = false;
 		boolean oct = false;
-		
+	
 		String input;
 		String oldinput = "0.0";
 				
